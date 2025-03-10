@@ -1,0 +1,82 @@
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+
+enum UserRole {
+  ADMIN
+  AGENT
+  USER
+}
+enum UserReference {
+  ADMIN
+  AGENT
+}
+model Users {
+  id                  String @id @default(cuid())
+  email               String @unique
+  phone               String
+  firstName           String
+  lastName            String
+  playerId            String @unique
+  role                UserRole @default(USER)
+  password            String
+  isBanned            Boolean @default(false)
+  isNewUser           Boolean @default(true)
+  createdAt           DateTime @default(now())
+  getBouns            Boolean @default(false)         
+  wallet              wallet?
+  @@unique([email,playerId])
+}
+model wallet {
+  id                  String @id @default(cuid())
+  balance             Decimal 
+  currencyCode        String
+  hasInactive         Boolean @default(false)
+  userId              String @unique
+  user                Users @relation(fields: [userId], references: [id])
+}
+
+
+model admin {
+  id                  String @id @default(cuid())
+  email               String @unique
+  twoFAEmail          String
+  fullName            String
+  password            String
+  createdAt           DateTime @default(now())
+}
+model agent {
+  id                  String @id @default(cuid())
+  email               String @unique
+  phone               String @unique
+  fullName            String
+  password            String
+  documents           String
+  isVerified          Boolean @default(false)
+  isEmailVerified     Boolean @default(false)
+  createdAt           DateTime @default(now())
+  agent               agentWallet?
+
+
+}
+model agentWallet {
+  id                  String @id @default(cuid())
+  balance             Decimal
+  currencyCode        String
+  hasInactive         Boolean @default(false)
+  agentId             String @unique
+  agent               agent @relation(fields: [agentId], references: [id])
+}
+
+model adminEmailVerificationToken {
+  id                  String @id @default(cuid())
+  token               String
+  expire              DateTime
+}
