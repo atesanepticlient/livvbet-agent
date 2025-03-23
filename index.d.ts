@@ -3,7 +3,7 @@ import "next-auth";
 
 declare module "next-auth" {
   interface Session {
-    user: Prisma.adminGetPayload<object>;
+    user: Prisma.agentGetPayload<object>;
   }
 
   interface Callbacks {

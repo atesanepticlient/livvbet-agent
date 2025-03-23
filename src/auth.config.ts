@@ -25,8 +25,8 @@ export default {
           throw new Error(CREDENTICALS_INCORRECT);
         }
 
-        const account = await db.admin.findFirst({
-          where: {},
+        const account = await db.agent.findUnique({
+          where: { email: user },
         });
 
         if (!account) {

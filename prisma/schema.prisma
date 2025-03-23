@@ -18,6 +18,7 @@ enum UserReference {
   ADMIN
   AGENT
 }
+
 model Users {
   id                  String @id @default(cuid())
   email               String @unique
@@ -27,6 +28,8 @@ model Users {
   playerId            String @unique
   role                UserRole @default(USER)
   password            String
+  refererType         String
+  refererId           String
   isBanned            Boolean @default(false)
   isNewUser           Boolean @default(true)
   createdAt           DateTime @default(now())
@@ -50,6 +53,7 @@ model admin {
   twoFAEmail          String
   fullName            String
   password            String
+  promo               String
   createdAt           DateTime @default(now())
 }
 model agent {
@@ -61,9 +65,9 @@ model agent {
   documents           String
   isVerified          Boolean @default(false)
   isEmailVerified     Boolean @default(false)
+  promo               String
   createdAt           DateTime @default(now())
   agent               agentWallet?
-
 
 }
 model agentWallet {

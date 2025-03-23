@@ -12,17 +12,16 @@ export const INTERNAL_SERVER_ERROR = "Somthing went wrong! Try Again";
  */
 export const CREDENTICALS_INCORRECT = "Invalid Credentials";
 
-
 /**
- * wrong or invalid token messsage
- * when tring to verify login
+ * Agent is already create with same email
+ * when tring to create a new agent
  * @type {string}
  */
-export const WRONG_TOKEN = "Your Entered wrong Code";
+export const AGENT_EXIST = "This Email is already used";
 
 /**
- * tokne expired message
- * when tring to verify login
+ * A used promo request
+ * when an agent trying to set or update promo
  * @type {string}
  */
-export const TOKEN_EXPIRED = "Code is too Old";
+export const PROMO_USED = "Try with another Promo";

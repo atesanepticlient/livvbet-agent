@@ -1,5 +1,5 @@
 import NextAuth from "next-auth";
-import { findAdmin } from "./data/admin";
+import { findAgentById } from "./data/agent";
 import authConfig from "./auth.config";
 
 export const { signIn, signOut, auth, handlers } = NextAuth({
@@ -8,25 +8,29 @@ export const { signIn, signOut, auth, handlers } = NextAuth({
   session: {
     strategy: "jwt",
   },
-  
+
   pages: {
     signIn: "/login",
   },
 
   callbacks: {
     async jwt({ token }) {
+      const agent = await findAgentById(token.sub!);
+      if (agent) {
+        token.isEmailVerified = agent.isEmailVerified;
+      }
       return token;
     },
     async session({ token, session }) {
       if (token.sub && session.user) {
-        const admin = await findAdmin();
+        const agent = await findAgentById(token.sub);
 
-        if (admin?.password) {
-          admin.password = "";
+        if (agent?.password) {
+          agent.password = "";
         }
- 
-        if (admin) {
-          session.user = { ...admin,emailVerified : new Date() };
+
+        if (agent) {
+          session.user = { ...agent, emailVerified: new Date() };
         }
       }
       return session;

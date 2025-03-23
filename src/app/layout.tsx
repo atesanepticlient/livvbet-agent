@@ -4,7 +4,9 @@ import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { Suspense } from "react";
 import { SessionProvider } from "next-auth/react";
+import StoreProvider from "./StoreProvider";
 import { auth } from "@/auth";
+import UnVerifiedAgent from "@/components/UnVerifiedAgent";
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -31,11 +33,17 @@ export default async function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased dark`}
       >
-        <Suspense>
-          <SessionProvider session={session}>{children}</SessionProvider>
+        {session && session.user && !session?.user.isEmailVerified ? (
+          <UnVerifiedAgent />
+        ) : (
+          <Suspense>
+            <SessionProvider session={session}>
+              <StoreProvider>{children}</StoreProvider>
+            </SessionProvider>
 
-          <Toaster />
-        </Suspense>
+            <Toaster />
+          </Suspense>
+        )}
       </body>
     </html>
   );

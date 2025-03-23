@@ -3,7 +3,7 @@
  * for only unauthorized users
  * @type {string[]}
  */
-export const authRoutes = ["/register", "/login", "/forget-password"];
+export const authRoutes = ["/signup", "/login", "/forget-password"];
 
 /**
  * public routes
