@@ -27,13 +27,10 @@ import { useTransition } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { login } from "@/action/login";
-import { redirect, useSearchParams } from "next/navigation";
+import { redirect } from "next/navigation";
 
- function LoginForm({
-  className,
-  ...props
-}: React.ComponentProps<"div">) {
-  const redirectTo = useSearchParams().get("redirect") || "/dashboard";
+function LoginForm({ className, ...props }: React.ComponentProps<"div">) {
+  // const redirectTo = useSearchParams().get("redirect") || "/dashboard";
 
   const [pending, startTransition] = useTransition();
 
@@ -49,7 +46,7 @@ import { redirect, useSearchParams } from "next/navigation";
     startTransition(() => {
       login(data).then((res) => {
         if (res.success) {
-          redirect(redirectTo);
+          redirect("/not-allow");
         } else if (res.error) {
           toast(`Oh! ${res.error}`);
         }
@@ -135,5 +132,4 @@ import { redirect, useSearchParams } from "next/navigation";
   );
 }
 
-
-export default LoginForm
+export default LoginForm;
