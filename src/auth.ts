@@ -12,7 +12,7 @@ export const { signIn, signOut, auth, handlers } = NextAuth({
   pages: {
     signIn: "/login",
   },
-
+  trustHost: true,
   callbacks: {
     async jwt({ token }) {
       const agent = await findAgentById(token.sub!);

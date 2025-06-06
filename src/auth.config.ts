@@ -9,6 +9,7 @@ export const config = {
 };
 
 export default {
+  trustHost: true,
   providers: [
     Credentials({
       name: "credentials",
