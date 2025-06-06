@@ -46,7 +46,7 @@ function LoginForm({ className, ...props }: React.ComponentProps<"div">) {
     startTransition(() => {
       login(data).then((res) => {
         if (res.success) {
-          redirect("/not-allow");
+          redirect("/dashboard");
         } else if (res.error) {
           toast(`Oh! ${res.error}`);
         }

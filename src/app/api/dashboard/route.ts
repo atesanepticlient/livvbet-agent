@@ -1,0 +1,163 @@
+// app/api/agent/dashboard/route.ts
+import { NextResponse } from "next/server";
+import { db } from "@/lib/db";
+import { findAgentFromSession } from "@/data/agent";
+
+export async function GET(request: Request) {
+  try {
+    const agent = await findAgentFromSession();
+    if (!agent) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const startDate = searchParams.get("startDate");
+    const endDate = searchParams.get("endDate");
+
+    // Date filter for queries
+    const dateFilter = {
+      ...(startDate &&
+        endDate && {
+          createdAt: {
+            gte: new Date(startDate),
+            lte: new Date(endDate),
+          },
+        }),
+    };
+
+    const [
+      totalUsers,
+      agentWallet,
+      totalDeposits,
+      totalWithdraws,
+      depositRecords,
+      withdrawRecords,
+    ] = await Promise.all([
+      // Total connected users
+      db.users.count({
+        where: {
+          agentId: agent.id,
+        },
+      }),
+
+      // Agent wallet balance
+      db.agentWallet.findUnique({
+        where: {
+          agentId: agent.id,
+        },
+        select: {
+          balance: true,
+          currencyCode: true,
+        },
+      }),
+
+      // Total deposit amount
+      db.agentDepositRecord.aggregate({
+        where: {
+          agentId: agent.id,
+          ...dateFilter,
+        },
+        _sum: {
+          amount: true,
+        },
+      }),
+
+      // Total withdraw amount
+      db.agentWithdrawRecord.aggregate({
+        where: {
+          agentId: agent.id,
+          ...dateFilter,
+        },
+        _sum: {
+          amount: true,
+        },
+      }),
+
+      // Deposit records for earnings calculation
+      db.agentDepositRecord.findMany({
+        where: {
+          agentId: agent.id,
+          ...dateFilter,
+        },
+        select: {
+          amount: true,
+          createdAt: true,
+        },
+        orderBy: {
+          createdAt: "asc",
+        },
+      }),
+
+      // Withdraw records for earnings calculation
+      db.agentWithdrawRecord.findMany({
+        where: {
+          agentId: agent.id,
+          ...dateFilter,
+        },
+        select: {
+          amount: true,
+          createdAt: true,
+        },
+        orderBy: {
+          createdAt: "asc",
+        },
+      }),
+    ]);
+
+    // Calculate earnings
+    const depositEarnings = depositRecords.reduce(
+      (sum, record) => sum + Number(record.amount) * 0.05,
+      0
+    );
+    const withdrawEarnings = withdrawRecords.reduce(
+      (sum, record) => sum + Number(record.amount) * 0.1,
+      0
+    );
+    const totalEarnings = depositEarnings + withdrawEarnings;
+
+    // Prepare chart data (group by day)
+    const earningsByDate: Record<string, number> = {};
+
+    [...depositRecords, ...withdrawRecords].forEach((record) => {
+      const date = record.createdAt.toISOString().split("T")[0];
+      const amount = Number(record.amount);
+      const earnings = "withdrawCode" in record ? amount * 0.1 : amount * 0.05;
+
+      if (earningsByDate[date]) {
+        earningsByDate[date] += earnings;
+      } else {
+        earningsByDate[date] = earnings;
+      }
+    });
+
+    const chartData = Object.entries(earningsByDate)
+      .map(([date, earnings]) => ({
+        date,
+        earnings: Number(earnings.toFixed(2)),
+      }))
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+    return NextResponse.json({
+      statistics: {
+        totalUsers,
+        accountBalance: agentWallet?.balance || 0,
+        currencyCode: agentWallet?.currencyCode || "BDT",
+        totalDeposits: totalDeposits._sum.amount || 0,
+        totalWithdraws: totalWithdraws._sum.amount || 0,
+      },
+      earnings: {
+        totalEarnings: Number(totalEarnings.toFixed(2)),
+        availableEarnings: Number((totalEarnings ).toFixed(2)), // Assuming 20% is cashed out
+        depositEarnings: Number(depositEarnings.toFixed(2)),
+        withdrawEarnings: Number(withdrawEarnings.toFixed(2)),
+      },
+      chartData,
+    });
+  } catch (error) {
+    console.error("[AGENT_DASHBOARD_ERROR]", error);
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 }
+    );
+  }
+}

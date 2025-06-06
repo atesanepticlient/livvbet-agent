@@ -28,15 +28,36 @@ model Users {
   playerId            String @unique
   role                UserRole @default(USER)
   password            String
-  refererType         String
-  refererId           String
+  casinoPassword      String
+  referId             String?
   isBanned            Boolean @default(false)
   isNewUser           Boolean @default(true)
   createdAt           DateTime @default(now())
   getBouns            Boolean @default(false)         
   wallet              wallet?
+  deposits            Deposit[]
+  withdraws           Withdraw[]
+  histories           PaymentHistory[]
+  messages            Message[] @relation(name: "messages")
+  referral            Referral ?
+  referredBy          Referral ? @relation("ReferredUsers", fields: [referredById], references: [id])
+  referredById        String?
+  agentDepositRecords AgentDepositRecord[]
+  agentWithdrawRecords AgentWithdrawRecord[]
+
+  agentId              String?
+  agent                agent?   @relation(fields: [agentId], references: [id])
   @@unique([email,playerId])
 }
+
+model Referral  {
+  id                  String @id @default(cuid())
+  userId              String @unique
+  user                Users     @relation(fields: [userId], references: [id])
+
+  referredUsers       Users[] @relation("ReferredUsers")
+}
+
 model wallet {
   id                  String @id @default(cuid())
   balance             Decimal 
@@ -53,8 +74,8 @@ model admin {
   twoFAEmail          String
   fullName            String
   password            String
-  promo               String
   createdAt           DateTime @default(now())
+  eWallet             AdEWallet[]
 }
 model agent {
   id                  String @id @default(cuid())
@@ -68,8 +89,56 @@ model agent {
   promo               String
   createdAt           DateTime @default(now())
   agent               agentWallet?
+  eWallet             AgEWallet[]
+  depositRecords      AgentDepositRecord[]
+  withdrawRecords     AgentWithdrawRecord[]
+  withdrawAddress     AgentWithdrawAddress?
+
+  users               Users[]
+}
+
+model AgentWithdrawAddress {
+  id                  String @id @default(cuid())
+  country             String
+  city                String
+  postOffice          String
+  storeName           String @unique
+  token               String @unique
+  createdAt           DateTime @default(now())
+  agentId             String @unique
+  agent               agent @relation(fields: [agentId], references: [id])
+}
+
+
+model AgentDepositRecord {
+  id                  String @id @default(cuid())
+  amount              Decimal
+  agentId             String
+  agent               agent @relation(fields: [agentId], references: [id])
+  userId              String
+  user                Users @relation(fields: [userId], references: [id])
+  createdAt           DateTime @default(now())
+}
+
+
+enum WithdrawStatus {
+  PENDING
+  ACCEPTED
+}
+model AgentWithdrawRecord {
+  id                  String @id @default(cuid())
+  amount              Decimal
+  withdrawCode        String
+  agentId             String
+  status              WithdrawStatus @default(PENDING)
+  agent               agent @relation(fields: [agentId], references: [id])
+  userId              String
+  user                Users @relation(fields: [userId], references: [id])
+  createdAt           DateTime @default(now())
 
 }
+
+
 model agentWallet {
   id                  String @id @default(cuid())
   balance             Decimal
@@ -83,4 +152,159 @@ model adminEmailVerificationToken {
   id                  String @id @default(cuid())
   token               String
   expire              DateTime
+
+}
+
+model eWallet{
+  id                  String @id @default(cuid())
+  walletName          String
+  image               String
+  agents              AgEWallet?
+  admin               AdEWallet?
+}
+
+model AgEWallet{
+  id                  String @id @default(cuid())
+  deposit             Json
+  withdraw            Json
+  eWalletId           String @unique
+  eWallet             eWallet @relation(fields: [eWalletId], references: [id])
+  isRecommended       Boolean
+  isActive            Boolean
+  agentId             String 
+  agent               agent @relation(fields: [agentId], references: [id])
+}
+
+model AdEWallet{
+  id                  String @id @default(cuid())
+  deposit             Json
+  withdraw            Json
+  eWalletId           String @unique
+  eWallet             eWallet @relation(fields: [eWalletId], references: [id])
+  isRecommended       Boolean
+  isActive            Boolean
+  adminId             String 
+  admin               admin @relation(fields: [adminId], references: [id])
+}
+
+enum PaymentStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+enum TrxType {
+  SENDMONEY
+  CASHOUT
+  PAYMENT
+}
+model DepositEWallet {
+  id                  String @id @default(cuid())
+  walletName          String
+  walletImage         String
+  walletNumber        String
+  minDeposit          Decimal
+  maxDeposit          Decimal
+  rules               String?
+  isRecommended       Boolean @default(false)
+  isActive            Boolean @default(false)
+  trxType             TrxType @default(SENDMONEY)
+  deposits            Deposit[]
+
+}
+
+model WithdrawEWallet {
+  id                  String @id @default(cuid())
+  walletName          String
+  walletImage         String
+  isRecommended       Boolean @default(true)
+  isActive            Boolean @default(true)
+  rules               String?
+  
+  withdraws           Withdraw[]
+}
+model Deposit{
+  id                  String @id @default(cuid())
+  payFrom             String
+  amount              Decimal
+  transactionId       String
+  status              PaymentStatus @default(PENDING)
+  userId              String
+  user                Users @relation(fields: [userId], references: [id])
+  transactions        PaymentHistory?
+  createdAt           DateTime @default(now())
+  ewalletId           String
+  ewallet             DepositEWallet @relation(fields: [ewalletId], references: [id], onDelete: Cascade)
+}
+
+model Withdraw{
+  id                  String @id @default(cuid())
+  paymentWalletNumber               String
+  amount              Decimal
+  status              PaymentStatus @default(PENDING)
+  userId              String
+  user                Users @relation(fields: [userId], references: [id])
+  createdAt           DateTime @default(now())
+  transactions        PaymentHistory?
+
+  withdrawEWalletID   String?
+  withdrawEWallet     WithdrawEWallet? @relation(fields: [withdrawEWalletID], references: [id])
+}
+
+enum PaymentHistoryStatus {
+  PENDING
+  SUCCESS
+  FAILED
+}
+enum PaymentHistoryType {
+  DEPOSIT
+  WITHDRAW
+}
+
+
+model PaymentHistory {
+  id                  String @id @default(cuid())
+  amount              Int?
+  type                PaymentHistoryType
+  status              PaymentHistoryStatus @default(PENDING)
+  createdAt           DateTime @default(now())
+  userId              String
+  user                Users @relation(fields: [userId], references: [id])
+  depositId           String? @unique
+  deposit             Deposit? @relation(fields: [depositId], references: [id])
+  withdrawId          String? @unique
+  withdraw            Withdraw? @relation(fields: [withdrawId], references: [id])
+}
+
+
+model Message {
+  id                  String @id @default(cuid())
+  title               String
+  description         String?
+  seen                Boolean @default(false)
+  createdAt           DateTime @default(now())
+  userId              String
+  user                Users @relation(name: "messages", fields: [userId], references: [id])
+}
+
+
+model Contact {
+  id                  String @id @default(cuid())
+  telegram            String?
+  email               String?
+  facebook            String?
+  instagram           String?
+  twitter             String?
+  youtube             String?
+}
+
+model Site {
+  id                  String @id @default(cuid())
+  firstDepositBonus   Decimal? @default(0)      
+  maxAgWithdraw       Decimal? @default(0)  
+  maxWithdraw         Decimal? @default(0)
+  minAgWithdraw       Decimal? @default(0)  
+  minWithdraw         Decimal? @default(0)
+  referBonuse         Decimal? @default(0)
+  signupBonus         Decimal? @default(0)
+  turnover            Decimal? @default(0)
 }

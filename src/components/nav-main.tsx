@@ -1,12 +1,9 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { ChevronRight, LayoutDashboard } from "lucide-react";
+import { IoIosSettings } from "react-icons/io";
 
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
 import {
   SidebarGroup,
   SidebarGroupLabel,
@@ -17,6 +14,9 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
+import Link from "next/link";
+import { Collapsible, CollapsibleTrigger } from "@radix-ui/react-collapsible";
+import { CollapsibleContent } from "./ui/collapsible";
 
 export function NavMain({
   items,
@@ -24,7 +24,7 @@ export function NavMain({
   items: {
     title: string;
     url: string;
-    icon?: React.ElementType;
+    icon?: any;
     isActive?: boolean;
     items?: {
       title: string;
@@ -37,42 +37,62 @@ export function NavMain({
       <SidebarGroupLabel>Platform</SidebarGroupLabel>
       <SidebarMenu>
         <SidebarMenuItem>
-          <SidebarMenuButton tooltip={"Dashboard"}>
-            <LayoutDashboard />
-            <span>Dashboard</span>
-          </SidebarMenuButton>
+          <Link href="/dashboard">
+            <SidebarMenuButton tooltip={"Dashboard"}>
+              <LayoutDashboard />
+              <span>Dashboard</span>
+            </SidebarMenuButton>
+          </Link>
         </SidebarMenuItem>
-        {items.map((item) => (
-          <Collapsible
-            key={item.title}
-            asChild
-            defaultOpen={item.isActive}
-            className="group/collapsible"
-          >
-            <SidebarMenuItem>
-              <CollapsibleTrigger asChild>
-                <SidebarMenuButton tooltip={item.title}>
-                  {item.icon && <item.icon />}
-                  <span>{item.title}</span>
-                  <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
-                </SidebarMenuButton>
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <SidebarMenuSub>
-                  {item.items?.map((subItem) => (
-                    <SidebarMenuSubItem key={subItem.title}>
-                      <SidebarMenuSubButton asChild>
-                        <a href={subItem.url}>
-                          <span>{subItem.title}</span>
-                        </a>
-                      </SidebarMenuSubButton>
-                    </SidebarMenuSubItem>
-                  ))}
-                </SidebarMenuSub>
-              </CollapsibleContent>
-            </SidebarMenuItem>
-          </Collapsible>
+        {items.map((item, i) => (
+          <SidebarMenuItem key={i}>
+            <Link href={item.url}>
+              <SidebarMenuButton tooltip={item.title}>
+                <item.icon />
+                <span>{item.title}</span>
+              </SidebarMenuButton>
+            </Link>
+          </SidebarMenuItem>
         ))}
+
+        <Collapsible asChild className="group/collapsible">
+          <SidebarMenuItem>
+            <CollapsibleTrigger asChild>
+              <SidebarMenuButton tooltip={"Setting"}>
+                <IoIosSettings />
+                <span>Setting</span>
+                <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+              </SidebarMenuButton>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <SidebarMenuSub>
+                <SidebarMenuSubItem>
+                  <SidebarMenuSubButton asChild>
+                    <a href={"/setting/profile"}>
+                      <span>Profile</span>
+                    </a>
+                  </SidebarMenuSubButton>
+                </SidebarMenuSubItem>
+
+                <SidebarMenuSubItem>
+                  <SidebarMenuSubButton asChild>
+                    <a href={"/setting/password"}>
+                      <span>Password</span>
+                    </a>
+                  </SidebarMenuSubButton>
+                </SidebarMenuSubItem>
+
+                <SidebarMenuSubItem>
+                  <SidebarMenuSubButton asChild>
+                    <a href={"/setting/withdraw-address"}>
+                      <span>Withdraw Address</span>
+                    </a>
+                  </SidebarMenuSubButton>
+                </SidebarMenuSubItem>
+              </SidebarMenuSub>
+            </CollapsibleContent>
+          </SidebarMenuItem>
+        </Collapsible>
       </SidebarMenu>
     </SidebarGroup>
   );

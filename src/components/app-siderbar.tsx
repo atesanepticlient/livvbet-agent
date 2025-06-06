@@ -1,13 +1,10 @@
 "use client";
 
 import * as React from "react";
-import { House, LogOut, CircleDollarSign } from "lucide-react";
-import { MdOutlineSupportAgent, MdBusinessCenter } from "react-icons/md";
-import { IoIosGift } from "react-icons/io";
-import { FaUsers } from "react-icons/fa6";
+import { House, LogOut } from "lucide-react";
+
 import { NavMain } from "@/components/nav-main";
 import { NavUser } from "@/components/nav-user";
-import { TeamSwitcher } from "@/components/team-switcher";
 import {
   Sidebar,
   SidebarContent,
@@ -16,122 +13,73 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar";
 import { redirect } from "next/navigation";
+import { MdOutlineAccountBalanceWallet } from "react-icons/md";
+import { PiHandWithdrawFill } from "react-icons/pi";
+import { GrTransaction } from "react-icons/gr";
+import useCurrentUser from "@/hooks/useCurrentUser";
+import { logout } from "@/action/logout";
+import { toast } from "sonner";
 
 // This is sample data.
-const data = {
-  user: {
-    name: "San Bin Hoque",
-    email: "epti060@gmail.com",
-    avatar: "/avatars/shadcn.jpg",
-  },
-  shortNavigation: [
-    {
-      action: () => redirect("/"),
-      label: "Home",
-      icon: House,
-    },
-    {
-      action: () => redirect("/"),
-      label: "Home",
-      icon: House,
-    },
-    {
-      action: () => redirect("/"),
-      label: "Logout",
-      icon: LogOut,
-    },
-  ],
-  navMain: [
-    {
-      title: "Payment",
-      url: "#",
-      icon: CircleDollarSign,
-      isActive: true,
-      items: [
-        {
-          title: "Deposit",
-          url: "#",
-        },
-        {
-          title: "Withdraw",
-          url: "#",
-        },
-        {
-          title: "Methods",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Agent",
-      url: "#",
-      icon: MdOutlineSupportAgent,
-      items: [
-        {
-          title: "Explor",
-          url: "#",
-        },
-
-        {
-          title: "Update Agents",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Users",
-      url: "#",
-      icon: FaUsers,
-      items: [
-        {
-          title: "Exlpor",
-          url: "#",
-        },
-        {
-          title: "Update Users",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Site Center",
-      url: "#",
-      icon: MdBusinessCenter,
-      items: [
-        {
-          title: "Features",
-          url: "#",
-        },
-        {
-          title: "Contact",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Promo",
-      url: "#",
-      icon: IoIosGift,
-      items: [
-        {
-          title: "Promo Codes",
-          url: "#",
-        },
-        {
-          title: "Bonus",
-          url: "#",
-        },
-      ],
-    },
-  ],
-};
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const agent = useCurrentUser();
+
+  const hanldeLogout = () => {
+    logout().then((res) => {
+      if (res.success) {
+        location.reload();
+      } else if (res.error) {
+        toast.error(res.error);
+      }
+    });
+  };
+
+  const data = {
+    user: {
+      name: agent?.fullName || "",
+      email: agent?.email || "",
+      avatar: "/avatars/shadcn.jpg",
+    },
+    shortNavigation: [
+      {
+        action: () => redirect("/"),
+        label: "Home",
+        icon: House,
+      },
+      {
+        action: () => redirect("/"),
+        label: "Home",
+        icon: House,
+      },
+      {
+        action: () => hanldeLogout(),
+        label: "Logout",
+        icon: LogOut,
+      },
+    ],
+    navMain: [
+      {
+        title: "Deposit",
+        url: "/deposit",
+        icon: MdOutlineAccountBalanceWallet,
+      },
+      {
+        title: "Withdraw",
+        url: "/withdraws",
+        icon: PiHandWithdrawFill,
+      },
+
+      {
+        title: "Transaction",
+        url: "/transaction-records",
+        icon: GrTransaction,
+      },
+    ],
+  };
   return (
     <Sidebar collapsible="icon" {...props}>
-      <SidebarHeader>
-        <TeamSwitcher navigations={data.shortNavigation} />
-      </SidebarHeader>
+      <SidebarHeader></SidebarHeader>
       <SidebarContent>
         <NavMain items={data.navMain} />
       </SidebarContent>

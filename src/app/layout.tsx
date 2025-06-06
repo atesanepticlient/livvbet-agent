@@ -33,7 +33,7 @@ export default async function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased dark`}
       >
-        {session && session.user && !session?.user.isEmailVerified ? (
+        {session && session.user && !session?.user.isVerified ? (
           <UnVerifiedAgent />
         ) : (
           <Suspense>
