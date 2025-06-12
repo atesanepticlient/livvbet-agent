@@ -1,3 +1,4 @@
+/* eslint-disable react/no-unescaped-entities */
 "use client";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -47,6 +48,7 @@ function LoginForm({ className, ...props }: React.ComponentProps<"div">) {
       login(data).then((res) => {
         if (res.success) {
           redirect("/dashboard");
+          location.reload();
         } else if (res.error) {
           toast(`Oh! ${res.error}`);
         }
@@ -108,7 +110,7 @@ function LoginForm({ className, ...props }: React.ComponentProps<"div">) {
                           disabled={pending}
                           id="password"
                           type="password"
-                          placeholder="password"
+                          placeholder="Password"
                           required
                           {...field}
                         />
@@ -117,6 +119,13 @@ function LoginForm({ className, ...props }: React.ComponentProps<"div">) {
                     </FormItem>
                   )}
                 />
+
+                <p className="text-center text-sm ">
+                  Don't have an account?{" "}
+                  <Link href="/signup" className="underline hover:no-underline">
+                    Create New
+                  </Link>
+                </p>
 
                 <div className="flex flex-col gap-3">
                   <Button type="submit" disabled={pending} className="w-full">

@@ -1,3 +1,4 @@
+"use client";
 import React from "react";
 import {
   Card,
@@ -8,8 +9,19 @@ import {
 } from "@/components/ui/card";
 
 import { Button } from "@/components/ui/button";
+import { logout } from "@/action/logout";
+import { toast } from "sonner";
 
 const UnVerifiedAgent = () => {
+  const hanldeLogout = () => {
+    logout().then((res) => {
+      if (res.success) {
+        location.reload();
+      } else if (res.error) {
+        toast.error(res.error);
+      }
+    });
+  };
   return (
     <div className="w-full h-screen flex justify-center items-center">
       <Card>
@@ -20,7 +32,7 @@ const UnVerifiedAgent = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Button>Logout</Button>
+          <Button onClick={() => hanldeLogout()}>Logout</Button>
         </CardContent>
       </Card>
     </div>

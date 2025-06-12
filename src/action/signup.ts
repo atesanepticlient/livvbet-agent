@@ -2,6 +2,7 @@
 
 import { AGENT_EXIST, INTERNAL_SERVER_ERROR, PROMO_USED } from "@/error";
 import { db } from "@/lib/db";
+import { generatePromoCode } from "@/lib/utils";
 import { signupSchema } from "@/schema";
 import bcrypt from "bcryptjs";
 
@@ -25,6 +26,10 @@ export const signup = async (data: zod.infer<typeof signupSchema>) => {
 
     const hasedPassword = await bcrypt.hash(password, 10);
 
+    let newPromo = "";
+    if (!promo) {
+      newPromo = generatePromoCode(6);
+    }
     await db.agent.create({
       data: {
         fullName,
@@ -32,13 +37,14 @@ export const signup = async (data: zod.infer<typeof signupSchema>) => {
         phone,
         password: hasedPassword,
         documents: "",
-        promo,
+        promo: promo || newPromo,
         agent: {
           create: {
             balance: 0,
             currencyCode,
           },
         },
+        
       },
     });
 

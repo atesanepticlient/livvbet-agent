@@ -9,7 +9,6 @@ import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
-  SidebarHeader,
   SidebarRail,
 } from "@/components/ui/sidebar";
 import { redirect } from "next/navigation";
@@ -19,6 +18,7 @@ import { GrTransaction } from "react-icons/gr";
 import useCurrentUser from "@/hooks/useCurrentUser";
 import { logout } from "@/action/logout";
 import { toast } from "sonner";
+import { FaUsers } from "react-icons/fa";
 
 // This is sample data.
 
@@ -75,11 +75,15 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         url: "/transaction-records",
         icon: GrTransaction,
       },
+      {
+        title: "Users",
+        url: "/users",
+        icon: FaUsers,
+      },
     ],
   };
   return (
     <Sidebar collapsible="icon" {...props}>
-      <SidebarHeader></SidebarHeader>
       <SidebarContent>
         <NavMain items={data.navMain} />
       </SidebarContent>

@@ -9,11 +9,11 @@ const Deposit = () => {
 
   return (
     <div className="w-full h-[70vh] flex justify-center items-center">
-      <Card>
+      <Card className="w-full md:w-[350px] lg:w-[400px]">
         <CardHeader>
           <CardTitle>Deposit to User</CardTitle>
         </CardHeader>
-        <CardContent className="w-[300px] md:w-[350px] lg:w-[400px]">
+        <CardContent>
           {!seletedUser.id && (
             <SearchUser
               onSelect={(user) =>

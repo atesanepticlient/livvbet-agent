@@ -1,4 +1,3 @@
-// components/agent/EarningsChart.tsx
 "use client";
 
 import {
@@ -34,53 +33,64 @@ export function EarningsChart() {
   };
 
   if (isLoading) {
-    return <Skeleton className="h-80 w-full" />;
+    return <Skeleton className="h-60 w-full sm:h-80" />;
   }
 
   return (
     <Card>
-      <CardHeader>
-        <div className="flex gap-5 items-center">
-          <CardTitle>Earnings Over Time</CardTitle>
-          <div className="flex gap-2">
-            <DatePicker
-              selected={
-                dateRange.startDate ? new Date(dateRange.startDate) : undefined
-              }
-              onSelect={(date) =>
-                setDateRange({
-                  ...dateRange,
-                  startDate: date?.toISOString() || "",
-                })
-              }
-              placeholder="Start Date"
-            />
-            <DatePicker
-              selected={
-                dateRange.endDate ? new Date(dateRange.endDate) : undefined
-              }
-              onSelect={(date) =>
-                setDateRange({
-                  ...dateRange,
-                  endDate: date?.toISOString() || "",
-                })
-              }
-              placeholder="End Date"
-            />
-            <Button onClick={handleApplyFilter}>Apply</Button>
+      <CardHeader className="p-4 sm:p-6">
+        <div className="flex flex-col gap-3 sm:gap-5 sm:flex-row sm:items-center">
+          <CardTitle className="text-lg sm:text-xl">
+            Earnings Over Time
+          </CardTitle>
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <div className="grid grid-cols-2 gap-2 w-full ">
+              <DatePicker
+                selected={
+                  dateRange.startDate
+                    ? new Date(dateRange.startDate)
+                    : undefined
+                }
+                onSelect={(date) =>
+                  setDateRange({
+                    ...dateRange,
+                    startDate: date?.toISOString() || "",
+                  })
+                }
+                placeholder="Start Date"
+                className="w-full sm:w-auto"
+              />
+              <DatePicker
+                selected={
+                  dateRange.endDate ? new Date(dateRange.endDate) : undefined
+                }
+                onSelect={(date) =>
+                  setDateRange({
+                    ...dateRange,
+                    endDate: date?.toISOString() || "",
+                  })
+                }
+                placeholder="End Date"
+                className="w-full sm:w-auto"
+              />
+            </div>
+            <Button onClick={handleApplyFilter} className="w-full sm:w-auto">
+              Apply
+            </Button>
           </div>
         </div>
       </CardHeader>
-      <CardContent>
-        <div className="h-80">
+      <CardContent className="p-2 sm:p-6">
+        <div className="h-60 sm:h-80">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={data?.chartData || []}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis
                 dataKey="date"
                 tickFormatter={(date) => format(new Date(date), "MMM dd")}
+                tick={{ fontSize: 10 }}
               />
-              <YAxis />
+              <YAxis tick={{ fontSize: 10 }} />
               <Tooltip
                 formatter={(value) => [`$${value}`, "Earnings"]}
                 labelFormatter={(date) => format(new Date(date), "PPP")}
@@ -90,7 +100,7 @@ export function EarningsChart() {
                 type="monotone"
                 dataKey="earnings"
                 stroke="#8884d8"
-                activeDot={{ r: 8 }}
+                activeDot={{ r: 6 }}
                 name="Earnings"
               />
             </LineChart>

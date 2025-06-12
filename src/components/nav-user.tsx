@@ -17,6 +17,8 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { logout } from "@/action/logout";
+import { toast } from "sonner";
 
 export function NavUser({
   user,
@@ -28,6 +30,16 @@ export function NavUser({
   };
 }) {
   const { isMobile } = useSidebar();
+
+  const hanldeLogout = () => {
+    logout().then((res) => {
+      if (res.success) {
+        location.reload();
+      } else if (res.error) {
+        toast.error(res.error);
+      }
+    });
+  };
 
   return (
     <SidebarMenu>
@@ -68,7 +80,7 @@ export function NavUser({
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={() => hanldeLogout()}>
               <LogOut />
               Log out
             </DropdownMenuItem>

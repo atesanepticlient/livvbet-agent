@@ -1,12 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
-import {
-  useGetPendingWithdrawsQuery,
-  useCompleteWithdrawMutation,
-} from "@/lib/features/withdrawApiSlice";
+import { useGetTransactionsQuery } from "@/lib/features/tranasctionApiSlice";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -25,18 +22,17 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { DatePicker } from "@/components/ui/date-picker";
-import { toast } from "sonner";
-import { INTERNAL_SERVER_ERROR } from "@/error";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Filter, Search } from "lucide-react";
+import { format } from "date-fns";
 
-export default function PendingWithdrawsPage() {
+export default function AgentTransactionsPage() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("PENDING");
+  const [typeFilter, setTypeFilter] = useState<"deposit" | "withdraw" | "">("");
   const [dateRange, setDateRange] = useState({
     startDate: "",
     endDate: "",
@@ -55,44 +51,20 @@ export default function PendingWithdrawsPage() {
     isLoading,
     isFetching,
     isError,
-  } = useGetPendingWithdrawsQuery({
+  } = useGetTransactionsQuery({
     page,
     limit,
+    type: typeFilter as "deposit" | "withdraw",
     search: searchTerm,
-    status: statusFilter,
     startDate: dateRange.startDate,
     endDate: dateRange.endDate,
   });
-
-  const [completeWithdraw] = useCompleteWithdrawMutation();
-  const [pending, startTransition] = useTransition();
-
-  const handleComplete = async (id: string) => {
-    const asyncAction = async () => {
-      await completeWithdraw(id).unwrap();
-      return true;
-    };
-
-    startTransition(() => {
-      toast.promise(asyncAction(), {
-        loading: "Completing...",
-        success: () => "Withdraw Completed",
-        error: (error) => {
-          if (error.data.error) {
-            return `${error.data.message}`;
-          } else {
-            return `${INTERNAL_SERVER_ERROR}`;
-          }
-        },
-      });
-    });
-  };
 
   const handleSearch = () => {
     const params = new URLSearchParams();
     params.set("page", "1");
     if (searchTerm) params.set("search", searchTerm);
-    if (statusFilter) params.set("status", statusFilter);
+    if (typeFilter) params.set("type", typeFilter);
     if (dateRange.startDate) params.set("startDate", dateRange.startDate);
     if (dateRange.endDate) params.set("endDate", dateRange.endDate);
     router.push(`${pathname}?${params.toString()}`);
@@ -108,7 +80,7 @@ export default function PendingWithdrawsPage() {
   return (
     <div className="container mx-auto px-2 py-4 space-y-4 sm:px-4 sm:py-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-xl font-bold sm:text-2xl">Pending Withdrawals</h1>
+        <h1 className="text-xl font-bold sm:text-2xl">Transaction History</h1>
 
         {/* Mobile filter button */}
         <div className="sm:hidden">
@@ -134,16 +106,18 @@ export default function PendingWithdrawsPage() {
                     onChange={(e) => setSearchTerm(e.target.value)}
                   />
                   <Select
-                    value={statusFilter}
-                    onValueChange={(value) => setStatusFilter(value)}
+                    value={typeFilter}
+                    onValueChange={(value) =>
+                      setTypeFilter(value as "deposit" | "withdraw" | "")
+                    }
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Filter by status" />
+                      <SelectValue placeholder="Filter by type" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="PENDING">Pending</SelectItem>
-                      <SelectItem value="COMPLETED">Completed</SelectItem>
-                      <SelectItem value="ALL">All</SelectItem>
+                      <SelectItem value="all">All Transactions</SelectItem>
+                      <SelectItem value="deposit">Deposits</SelectItem>
+                      <SelectItem value="withdraw">Withdrawals</SelectItem>
                     </SelectContent>
                   </Select>
                   <DatePicker
@@ -195,16 +169,18 @@ export default function PendingWithdrawsPage() {
             onKeyDown={(e) => e.key === "Enter" && handleSearch()}
           />
           <Select
-            value={statusFilter}
-            onValueChange={(value) => setStatusFilter(value)}
+            value={typeFilter}
+            onValueChange={(value) =>
+              setTypeFilter(value as "deposit" | "withdraw" | "")
+            }
           >
             <SelectTrigger>
-              <SelectValue placeholder="Filter by status" />
+              <SelectValue placeholder="Filter by type" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="PENDING">Pending</SelectItem>
-              <SelectItem value="COMPLETED">Completed</SelectItem>
-              <SelectItem value="ALL">All</SelectItem>
+              <SelectItem value="all">All Transactions</SelectItem>
+              <SelectItem value="deposit">Deposits</SelectItem>
+              <SelectItem value="withdraw">Withdrawals</SelectItem>
             </SelectContent>
           </Select>
           <DatePicker
@@ -237,79 +213,61 @@ export default function PendingWithdrawsPage() {
         <Table className="min-w-[600px] sm:min-w-full">
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[100px]">Player ID</TableHead>
+              <TableHead className="w-[100px]">Type</TableHead>
+              <TableHead>Player ID</TableHead>
               <TableHead>User</TableHead>
               <TableHead>Amount</TableHead>
-              <TableHead>Code</TableHead>
               <TableHead>Date</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading || isFetching ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-8">
+                <TableCell colSpan={6} className="text-center py-8">
                   Loading...
                 </TableCell>
               </TableRow>
             ) : isError ? (
               <TableRow>
                 <TableCell
-                  colSpan={7}
+                  colSpan={6}
                   className="text-center text-destructive py-8"
                 >
-                  Failed to load withdrawals
+                  Failed to load transactions
                 </TableCell>
               </TableRow>
             ) : response?.data?.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-8">
-                  No withdrawals found
+                <TableCell colSpan={6} className="text-center py-8">
+                  No transactions found
                 </TableCell>
               </TableRow>
             ) : (
-              response?.data?.map((withdraw: any) => (
-                <TableRow key={withdraw.id}>
-                  <TableCell className="font-medium">
-                    {withdraw.user.playerId}
-                  </TableCell>
-                  <TableCell>
-                    {withdraw.user.firstName} {withdraw.user.lastName}
-                  </TableCell>
-                  <TableCell>
-                    {typeof withdraw.amount === "number"
-                      ? withdraw.amount.toFixed(2)
-                      : withdraw.amount.toString()}
-                  </TableCell>
-                  <TableCell className="font-mono text-sm">
-                    {withdraw.withdrawCode}
-                  </TableCell>
-                  <TableCell className="whitespace-nowrap">
-                    {new Date(withdraw.createdAt).toLocaleDateString()}
-                  </TableCell>
+              response?.data?.map((transaction: any) => (
+                <TableRow key={transaction.id}>
                   <TableCell>
                     <span
                       className={`px-2 py-1 rounded text-xs ${
-                        withdraw.status === "PENDING"
-                          ? "bg-yellow-100 text-yellow-800"
-                          : "bg-green-100 text-green-800"
+                        transaction.type === "deposit"
+                          ? "bg-blue-100 text-blue-800"
+                          : "bg-purple-100 text-purple-800"
                       }`}
                     >
-                      {withdraw.status}
+                      {transaction.type.toUpperCase()}
                     </span>
                   </TableCell>
+                  <TableCell className="font-medium">
+                    {transaction.user.playerId}
+                  </TableCell>
                   <TableCell>
-                    {withdraw.status === "PENDING" && (
-                      <Button
-                        disabled={pending}
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleComplete(withdraw.id)}
-                        className="whitespace-nowrap"
-                      >
-                        Complete
-                      </Button>
+                    {transaction.user.firstName} {transaction.user.lastName}
+                  </TableCell>
+                  <TableCell>BDT {transaction.amount}</TableCell>
+                  
+                  <TableCell className="whitespace-nowrap">
+                    {format(
+                      new Date(transaction.createdAt),
+                      "MMM dd, yyyy HH:mm"
                     )}
                   </TableCell>
                 </TableRow>
@@ -324,7 +282,7 @@ export default function PendingWithdrawsPage() {
         <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
           <div className="text-sm text-muted-foreground">
             Showing {response.data.length} of {response.pagination.total}{" "}
-            withdrawals
+            transactions
           </div>
           <div className="flex gap-2">
             <Button

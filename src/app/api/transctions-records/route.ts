@@ -21,11 +21,12 @@ export async function GET(request: Request) {
 
     const skip = (page - 1) * limit;
 
+    console.log({ type });
+
     // Build where clauses
     const whereClause: any = {
       agentId: agent.id,
-      ...(type === "deposit" && { amount: { not: null } }), // Only deposits
-      ...(type === "withdraw" && { withdrawCode: { not: null } }), // Only withdraws
+      
       ...(search && {
         OR: [
           { user: { playerId: { contains: search, mode: "insensitive" } } },

@@ -1,4 +1,3 @@
-// components/agent/DashboardStats.tsx
 "use client";
 
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -10,16 +9,16 @@ export function DashboardStats() {
 
   if (isLoading) {
     return (
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-3 grid-cols-2 sm:gap-4 md:grid-cols-4">
         {[1, 2, 3, 4].map((i) => (
           <Card key={i}>
-            <CardHeader>
+            <CardHeader className="p-3 sm:p-6">
               <CardTitle>
-                <Skeleton className="h-6 w-3/4" />
+                <Skeleton className="h-5 w-3/4 sm:h-6" />
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <Skeleton className="h-8 w-full" />
+            <CardContent className="p-3 sm:p-6">
+              <Skeleton className="h-7 w-full sm:h-8" />
             </CardContent>
           </Card>
         ))}
@@ -28,45 +27,53 @@ export function DashboardStats() {
   }
 
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+    <div className="grid gap-3 grid-cols-2 sm:gap-4 md:grid-cols-4">
       <Card>
-        <CardHeader>
-          <CardTitle className="text-sm font-medium">Total Users</CardTitle>
+        <CardHeader className="pt-3 sm:pt-6">
+          <CardTitle className="text-xs font-medium sm:text-sm">
+            Total Users
+          </CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">
+        <CardContent className="">
+          <div className="text-xl font-bold sm:text-2xl">
             {data?.statistics.totalUsers || 0}
           </div>
         </CardContent>
       </Card>
       <Card>
-        <CardHeader>
-          <CardTitle className="text-sm font-medium">Account Balance</CardTitle>
+        <CardHeader className="pt-3 sm:pt-6">
+          <CardTitle className="text-xs font-medium sm:text-sm">
+            Account Balance
+          </CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">
+        <CardContent className="">
+          <div className="text-xl font-bold sm:text-2xl">
             {Number(data?.statistics.accountBalance || 0).toFixed(2)}{" "}
             {data?.statistics.currencyCode || "USD"}
           </div>
         </CardContent>
       </Card>
       <Card>
-        <CardHeader>
-          <CardTitle className="text-sm font-medium">Total Deposits</CardTitle>
+        <CardHeader className="pt-3 sm:pt-6">
+          <CardTitle className="text-xs font-medium sm:text-sm">
+            Total Deposits
+          </CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">
+        <CardContent className="">
+          <div className="text-xl font-bold sm:text-2xl">
             {Number(data?.statistics.totalDeposits || 0).toFixed(2)}{" "}
             {data?.statistics.currencyCode || "USD"}
           </div>
         </CardContent>
       </Card>
       <Card>
-        <CardHeader>
-          <CardTitle className="text-sm font-medium">Total Withdraws</CardTitle>
+        <CardHeader className="pt-3 sm:pt-6">
+          <CardTitle className="text-xs font-medium sm:text-sm">
+            Total Withdraws
+          </CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">
+        <CardContent className="">
+          <div className="text-xl font-bold sm:text-2xl">
             {Number(data?.statistics.totalWithdraws || 0).toFixed(2)}{" "}
             {data?.statistics.currencyCode || "USD"}
           </div>

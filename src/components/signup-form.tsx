@@ -30,6 +30,7 @@ import { redirect } from "next/navigation";
 import { Separator } from "@/components/ui/separator";
 import { Label } from "@/components/ui/label";
 import { addDocuments, signup } from "@/action/signup";
+import Link from "next/link";
 export function SignupForm({
   className,
   ...props
@@ -166,7 +167,7 @@ export function SignupForm({
                             disabled={pending}
                             id="phone"
                             type="text"
-                            placeholder="01735156549"
+                            placeholder="01*********"
                             required
                             {...field}
                           />
@@ -190,7 +191,7 @@ export function SignupForm({
                             disabled={pending}
                             id="password"
                             type="password"
-                            placeholder="password"
+                            placeholder="Password"
                             required
                             {...field}
                           />
@@ -249,9 +250,7 @@ export function SignupForm({
                     control={form.control}
                     render={({ field }) => (
                       <FormItem className="grid ">
-                        <FormLabel>
-                          Promo Code 
-                        </FormLabel>
+                        <FormLabel>Promo Code (Optional)</FormLabel>
 
                         <FormControl>
                           <Input
@@ -259,7 +258,6 @@ export function SignupForm({
                             id="currency"
                             type="text"
                             placeholder="e.g.Jone12"
-                            required
                             {...field}
                           />
                         </FormControl>
@@ -279,6 +277,12 @@ export function SignupForm({
                     onChange={(e) => setDocuments(e.target!.files![0])}
                   />
                 </div>
+                <p className="text-center text-sm ">
+                  Do you have an account?{" "}
+                  <Link href="/login" className="underline hover:no-underline">
+                    Login
+                  </Link>
+                </p>
 
                 <div className="flex flex-col gap-3">
                   <Button type="submit" disabled={pending} className="w-full">

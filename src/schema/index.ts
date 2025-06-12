@@ -11,7 +11,7 @@ export const signupSchema = zod
     email: zod.string().email("Invalid emaill address"),
     phone: zod.string().min(1, "Phone number is required"),
     password: zod.string().min(6, "Password must be at least 6 characters"),
-    promo: zod.string().min(1, "Promo code is required"),
+    promo: zod.optional(zod.string()),
     confirmPassword: zod.string().min(1, "Confirm password is required"),
     currencyCode: zod.string().min(1, "Currency code is required"),
   })

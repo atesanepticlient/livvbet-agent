@@ -1,7 +1,7 @@
 "use client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useFetchUsersQuery } from "@/lib/features/userApiSlice";
+import { useFetchAllUsersQuery } from "@/lib/features/userApiSlice";
 import React, { useState } from "react";
 
 const SearchUser = ({
@@ -11,7 +11,7 @@ const SearchUser = ({
 }) => {
   const [search, setSearch] = useState("");
 
-  const { data, isFetching } = useFetchUsersQuery({
+  const { data, isFetching } = useFetchAllUsersQuery({
     search: search,
     limit: search ? 10 : 0,
     status: "ALL",
@@ -37,7 +37,7 @@ const SearchUser = ({
       </div>
       <div>
         {!isFetching && users && users.length > 0 && (
-          <ul className="p-2">
+          <ul className="py-2">
             <li className="flex items-center justify-between py-2 px-1 border rounded-sm">
               <span className="text-sm font-semibold text-white flex-2">
                 Email

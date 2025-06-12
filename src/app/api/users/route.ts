@@ -1,61 +1,88 @@
-import { INTERNAL_SERVER_ERROR } from "@/error";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { findAgentFromSession } from "@/data/agent";
 import { db } from "@/lib/db";
-import { Prisma } from "@prisma/client";
-import { NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 
-export const GET = async (req: NextRequest) => {
+export async function GET(request: Request) {
   try {
-    const { searchParams } = new URL(req.url);
-
-    // Filters
-    const status = searchParams.get("status") || "all";
+    const { searchParams } = new URL(request.url);
     const search = searchParams.get("search") || "";
-    // Pagination
-    const page = parseInt(searchParams.get("page") || "1", 10);
-    const limit = parseInt(searchParams.get("limit") || "10", 10);
-    const skip = (page - 1) * limit;
+    const page = parseInt(searchParams.get("page") || "1");
+    const limit = parseInt(searchParams.get("limit") || "10");
 
-    const query: Prisma.UsersWhereInput = {};
-
-    if (status === "banned") {
-      query.isBanned = true;
-    } else if (status === "unbanned") {
-      query.isBanned = false;
+    const agent = await findAgentFromSession();
+    if (!agent) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    if (search) {
-      query.OR = [
-        { playerId: { contains: search, mode: "insensitive" } },
-        { phone: { contains: search, mode: "insensitive" } },
+    const where: any = {
+      agentId: agent.id,
+      OR: [
         { email: { contains: search, mode: "insensitive" } },
-      ];
-    }
+        { playerId: { contains: search, mode: "insensitive" } },
+      ],
+    };
 
-    // Total count for pagination
-    const total = await db.users.count({ where: query });
+    const [users, total] = await Promise.all([
+      db.users.findMany({
+        where,
+        skip: (page - 1) * limit,
+        take: limit,
+        select: {
+          id: true,
+          email: true,
+          playerId: true,
+          firstName: true,
+          lastName: true,
+          isBanned: true,
+          createdAt: true,
+          _count: {
+            select: {
+              deposits: true,
+              withdraws: true,
+            },
+          },
+        },
+        orderBy: { createdAt: "desc" },
+      }),
+      db.users.count({ where }),
+    ]);
 
-    const users = await db.users.findMany({
-      where: query,
-      orderBy: {
-        createdAt: "desc",
-      },
-      include: {
-        wallet: true,
-      },
-      skip,
-      take: limit,
-    });
+    // Get deposit and withdraw totals for each user
+    const usersWithTotals = await Promise.all(
+      users.map(async (user) => {
+        const [totalDeposit, totalWithdraw] = await Promise.all([
+          db.agentDepositRecord.aggregate({
+            _sum: { amount: true },
+            where: { userId: user.id, agentId: agent.id },
+          }),
+          db.agentWithdrawRecord.aggregate({
+            _sum: { amount: true },
+            where: { userId: user.id, agentId: agent.id },
+          }),
+        ]);
 
-    return Response.json({
-      payload: {
+        return {
+          ...user,
+          totalDeposit: totalDeposit._sum.amount || 0,
+          totalWithdraw: totalWithdraw._sum.amount || 0,
+        };
+      })
+    );
+
+    return NextResponse.json({
+      users: usersWithTotals,
+      pagination: {
         total,
-        page: +page,
-        limit: +limit,
-        users: users,
+        page,
+        totalPages: Math.ceil(total / limit),
       },
     });
   } catch (error) {
-    console.log("user data fetch ", error);
-    return Response.json({ message: INTERNAL_SERVER_ERROR }, { status: 500 });
+    console.error("[AGENT_USERS_GET]", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
   }
-};
+}

@@ -16,7 +16,10 @@ export const depositAction = async (data: { amount: number; id: string }) => {
     if (amount > +agent.agent.balance) {
       return { error: "Insufficient balance" };
     }
-    const user = await db.users.findUnique({ where: { id } });
+    const user = await db.users.findUnique({
+      where: { id },
+      include: { agent: true },
+    });
     if (!user) return { error: "User not found" };
 
     await db.wallet.update({
@@ -32,7 +35,7 @@ export const depositAction = async (data: { amount: number; id: string }) => {
 
     await db.agentWallet.update({
       where: {
-        id: agent.id,
+        agentId: agent.id,
       },
       data: {
         balance: {
@@ -52,7 +55,7 @@ export const depositAction = async (data: { amount: number; id: string }) => {
       },
     });
 
-    const record = await db.agentDepositRecord.create({
+    await db.agentDepositRecord.create({
       data: {
         amount,
         agent: {
@@ -68,8 +71,44 @@ export const depositAction = async (data: { amount: number; id: string }) => {
       },
     });
 
-    return { success: true, payload: { user, record } };
-  } catch {
+    if (!user.agent) {
+      await db.users.update({
+        where: { id },
+        data: {
+          agent: {
+            connect: {
+              id: agent.id,
+            },
+          },
+        },
+      });
+    } else if (user.agent && user.agent.id !== agent.id) {
+      await db.$transaction([
+        db.users.update({
+          where: { id },
+          data: {
+            agent: {
+              disconnect: {
+                id: user.agent.id,
+              },
+            },
+          },
+        }),
+        db.users.update({
+          where: { id },
+          data: {
+            agent: {
+              connect: {
+                id: agent.id,
+              },
+            },
+          },
+        }),
+      ]);
+    }
+    return { success: true };
+  } catch (error) {
+    console.log({ error });
     return { error: INTERNAL_SERVER_ERROR };
   }
 };
