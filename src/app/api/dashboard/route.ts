@@ -104,6 +104,25 @@ export async function GET(request: Request) {
       }),
     ]);
 
+    const totalDepositPayouts =
+      (
+        await db.agentEarningWithdrawReq.aggregate({
+          where: { agentId: agent.id },
+          _sum: {
+            dpAmount: true,
+          },
+        })
+      )._sum.dpAmount || 0;
+
+    const totalWithdarwPayouts =
+      (
+        await db.agentEarningWithdrawReq.aggregate({
+          where: { agentId: agent.id },
+          _sum: {
+            wdAmount: true,
+          },
+        })
+      )._sum.wdAmount || 0;
     // Calculate earnings
     const depositEarnings = depositRecords.reduce(
       (sum, record) => sum + Number(record.amount) * 0.05,
@@ -113,7 +132,25 @@ export async function GET(request: Request) {
       (sum, record) => sum + Number(record.amount) * 0.1,
       0
     );
+
+    const depositEarningsAvail = depositEarnings - +totalDepositPayouts;
+    const withdrawEarningsAvail = withdrawEarnings - +totalWithdarwPayouts;
+
+    const totalPayouts =
+      (
+        await db.agentEarningWithdrawReq.aggregate({
+          where: {
+            agentId: agent.id,
+          },
+          _sum: {
+            amount: true,
+          },
+        })
+      )._sum.amount || 0;
+
     const totalEarnings = depositEarnings + withdrawEarnings;
+    const totalEarningsAvail =
+      depositEarnings + withdrawEarnings - +totalPayouts;
 
     // Prepare chart data (group by day)
     const earningsByDate: Record<string, number> = {};
@@ -147,7 +184,9 @@ export async function GET(request: Request) {
       },
       earnings: {
         totalEarnings: Number(totalEarnings.toFixed(2)),
-        availableEarnings: Number((totalEarnings ).toFixed(2)), // Assuming 20% is cashed out
+        totalAvailDeposit: Number(depositEarningsAvail.toFixed(2)),
+        totalAvailWithdraw: Number(withdrawEarningsAvail.toFixed(2)),
+        availableEarnings: Number(totalEarningsAvail.toFixed(2)), // Assuming 20% is cashed out
         depositEarnings: Number(depositEarnings.toFixed(2)),
         withdrawEarnings: Number(withdrawEarnings.toFixed(2)),
       },

@@ -19,6 +19,7 @@ import useCurrentUser from "@/hooks/useCurrentUser";
 import { logout } from "@/action/logout";
 import { toast } from "sonner";
 import { FaUsers } from "react-icons/fa";
+import { RiMoneyDollarCircleFill } from "react-icons/ri";
 
 // This is sample data.
 
@@ -79,6 +80,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         title: "Users",
         url: "/users",
         icon: FaUsers,
+      },
+      {
+        title: "Earning",
+        url: "/earning",
+        icon: RiMoneyDollarCircleFill,
       },
     ],
   };

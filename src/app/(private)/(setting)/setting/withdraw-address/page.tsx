@@ -69,7 +69,7 @@ export default function AgentWithdrawAddress() {
   };
 
   useEffect(() => {
-    if (agent.withdrawAddress.country) {
+    if (agent?.withdrawAddress?.country) {
       setSelectedCountry(agent.withdrawAddress.country);
     }
     if (agent.withdrawAddress) {
@@ -87,7 +87,7 @@ export default function AgentWithdrawAddress() {
       <CardHeader>
         <CardTitle>Withdraw Address</CardTitle>
         <CardDescription>
-          Withdraw Address is your Uniqe indentity that will be used to find out
+          Withdraw Address is your Unique indentity that will be used to find out
           you to users.
         </CardDescription>
       </CardHeader>

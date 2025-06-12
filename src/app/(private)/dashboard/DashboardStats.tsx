@@ -29,7 +29,7 @@ export function DashboardStats() {
   return (
     <div className="grid gap-3 grid-cols-2 sm:gap-4 md:grid-cols-4">
       <Card>
-        <CardHeader className="pt-3 sm:pt-6">
+        <CardHeader className="">
           <CardTitle className="text-xs font-medium sm:text-sm">
             Total Users
           </CardTitle>
@@ -41,7 +41,7 @@ export function DashboardStats() {
         </CardContent>
       </Card>
       <Card>
-        <CardHeader className="pt-3 sm:pt-6">
+        <CardHeader>
           <CardTitle className="text-xs font-medium sm:text-sm">
             Account Balance
           </CardTitle>
@@ -54,7 +54,7 @@ export function DashboardStats() {
         </CardContent>
       </Card>
       <Card>
-        <CardHeader className="pt-3 sm:pt-6">
+        <CardHeader >
           <CardTitle className="text-xs font-medium sm:text-sm">
             Total Deposits
           </CardTitle>
@@ -67,7 +67,7 @@ export function DashboardStats() {
         </CardContent>
       </Card>
       <Card>
-        <CardHeader className="pt-3 sm:pt-6">
+        <CardHeader >
           <CardTitle className="text-xs font-medium sm:text-sm">
             Total Withdraws
           </CardTitle>

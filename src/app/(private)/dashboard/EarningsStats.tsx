@@ -1,8 +1,10 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useGetDashboardDataQuery } from "@/lib/features/dashboardApiSlice";
+import BonusClaim from "./BonusClaim";
 
 export function EarningsStats() {
   const { data, isLoading } = useGetDashboardDataQuery({});
@@ -29,7 +31,7 @@ export function EarningsStats() {
   return (
     <div className="grid gap-3 sm:gap-4 md:grid-cols-2 lg:grid-cols-3">
       <Card>
-        <CardHeader className="pt-3 sm:pt-6">
+        <CardHeader>
           <CardTitle className="text-xs font-medium sm:text-sm">
             Total Earnings
           </CardTitle>
@@ -41,7 +43,7 @@ export function EarningsStats() {
         </CardContent>
       </Card>
       <Card>
-        <CardHeader className="pt-3 sm:pt-6">
+        <CardHeader>
           <CardTitle className="text-xs font-medium sm:text-sm">
             Available Earnings
           </CardTitle>
@@ -52,8 +54,8 @@ export function EarningsStats() {
           </div>
         </CardContent>
       </Card>
-      <Card>
-        <CardHeader className="pt-3 sm:pt-6">
+      <Card className="relative">
+        <CardHeader>
           <CardTitle className="text-xs font-medium sm:text-sm">
             Earnings Breakdown
           </CardTitle>
@@ -61,12 +63,26 @@ export function EarningsStats() {
         <CardContent className="">
           <div className="flex justify-between text-xs sm:text-sm">
             <span>From Deposits:</span>
-            <span>{data?.earnings.depositEarnings || 0} BDT</span>
+            <span>{data?.earnings.totalAvailDeposit || 0} BDT</span>
           </div>
           <div className="flex justify-between text-xs sm:text-sm">
             <span>From Withdraws:</span>
-            <span>{data?.earnings.withdrawEarnings || 0} BDT</span>
+            <span>{data?.earnings.totalAvailWithdraw || 0} BDT</span>
           </div>
+          <BonusClaim
+            data={{
+              deEarning: data?.earnings.totalAvailDeposit,
+              wdEarning: data?.earnings.totalAvailWithdraw,
+            }}
+          >
+            <Button
+              size={"sm"}
+              variant={"secondary"}
+              className="absolute right-2 top-2"
+            >
+              Claim
+            </Button>
+          </BonusClaim>
         </CardContent>
       </Card>
     </div>

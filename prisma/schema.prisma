@@ -44,10 +44,25 @@ model Users {
   referredById        String?
   agentDepositRecords AgentDepositRecord[]
   agentWithdrawRecords AgentWithdrawRecord[]
-
+  turnOver              UsersTurnOver?
   agentId              String?
   agent                agent?   @relation(fields: [agentId], references: [id])
+
+  // verification 
+  phoneVerified      Boolean @default(false)
+  verificationCode   String?
+  verificationCodeExpiresAt DateTime?
+  // ------------
   @@unique([email,playerId])
+}
+
+model UsersTurnOver {
+  id                  String @id @default(cuid())
+  totalTurnOver       Decimal @default(0)
+  activeTurnOver      Decimal @default(0)
+  userId              String @unique
+  user                Users @relation(fields: [userId], references: [id])
+
 }
 
 model Referral  {
@@ -94,7 +109,24 @@ model agent {
   withdrawRecords     AgentWithdrawRecord[]
   withdrawAddress     AgentWithdrawAddress?
 
+  earning             AgentEarningWithdrawReq[]
   users               Users[]
+}
+
+enum AgentEarningWithdrawReqStatus {
+  CLEARED
+  PENDING
+  UNCLEARED
+}
+model AgentEarningWithdrawReq {
+  id                  String @id @default(cuid())
+  amount              Decimal
+  wdAmount            Decimal
+  dpAmount            Decimal
+  agentId             String
+  agent               agent @relation(fields: [agentId], references: [id])
+  status              AgentEarningWithdrawReqStatus @default(PENDING)
+  createdAt           DateTime @default(now())
 }
 
 model AgentWithdrawAddress {
@@ -308,3 +340,5 @@ model Site {
   signupBonus         Decimal? @default(0)
   turnover            Decimal? @default(0)
 }
+
+

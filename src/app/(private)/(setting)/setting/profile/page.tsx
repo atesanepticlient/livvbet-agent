@@ -36,7 +36,7 @@ export default function AgentDashboard() {
   const walletData = {
     balance: +agent.agent.balance,
     currency: agent.agent.currencyCode,
-    lastTransaction: "2023-06-10T14:45:00Z",
+    lastTransaction: agent.createdAt,
   };
 
   //   const transactions = [
@@ -152,17 +152,18 @@ export default function AgentDashboard() {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {/* <div className="border rounded-lg p-4">
+                  <h3 className="text-sm font-medium text-muted-foreground">
+                    Total Balance
+                  </h3>
+                  <p className="text-2xl font-bold">
+                    ৳{walletData.balance.toFixed(2)}
+                  </p>
+                </div> */}
+
                 <div className="border rounded-lg p-4">
                   <h3 className="text-sm font-medium text-muted-foreground">
                     Available
-                  </h3>
-                  <p className="text-2xl font-bold">
-                    ৳{(walletData.balance * 0.95).toFixed(2)}
-                  </p>
-                </div>
-                <div className="border rounded-lg p-4">
-                  <h3 className="text-sm font-medium text-muted-foreground">
-                    Total Balance
                   </h3>
                   <p className="text-2xl font-bold">
                     ৳{walletData.balance.toFixed(2)}
@@ -283,7 +284,7 @@ export default function AgentDashboard() {
                   <div className="flex justify-between items-center">
                     <div>
                       <h3 className="font-medium">Verification Document</h3>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-sm text-muted-foreground max-w-[180px] md:max-w-full line-clamp-1">
                         {agentData.documents || "No document uploaded"}
                       </p>
                     </div>
