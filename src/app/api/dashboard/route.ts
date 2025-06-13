@@ -10,6 +10,11 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const site = await db.site.findFirst({
+      where: {},
+      select: { agentWithdrawEarning: true, agentDepositEarning: true },
+    });
+
     const { searchParams } = new URL(request.url);
     const startDate = searchParams.get("startDate");
     const endDate = searchParams.get("endDate");
@@ -125,11 +130,13 @@ export async function GET(request: Request) {
       )._sum.wdAmount || 0;
     // Calculate earnings
     const depositEarnings = depositRecords.reduce(
-      (sum, record) => sum + Number(record.amount) * 0.05,
+      (sum, record) =>
+        sum + Number(record.amount) * (+site!.agentDepositEarning! / 100),
       0
     );
     const withdrawEarnings = withdrawRecords.reduce(
-      (sum, record) => sum + Number(record.amount) * 0.1,
+      (sum, record) =>
+        sum + Number(record.amount) * (+site!.agentWithdrawEarning! / 100),
       0
     );
 

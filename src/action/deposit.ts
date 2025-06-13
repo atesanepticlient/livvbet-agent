@@ -13,6 +13,19 @@ export const depositAction = async (data: { amount: number; id: string }) => {
 
     if (!agent) return { error: "Reload the page and try again" };
 
+    const site = await db.site.findFirst({
+      where: {},
+      select: { minAgDeposit: true, maxAgDeposit: true },
+    });
+
+    if (amount > +site!.maxAgDeposit!) {
+      return { error: `Maximum deposit ${+site!.maxAgDeposit!}` };
+    }
+
+    if (amount < +site!.minAgDeposit!) {
+      return { error: `Minimum deposit ${+site!.minAgDeposit!}` };
+    }
+
     if (amount > +agent.agent.balance) {
       return { error: "Insufficient balance" };
     }

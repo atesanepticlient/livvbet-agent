@@ -35,6 +35,7 @@ model Users {
   createdAt           DateTime @default(now())
   getBouns            Boolean @default(false)         
   wallet              wallet?
+  bonusWallet         BonusWallet?
   deposits            Deposit[]
   withdraws           Withdraw[]
   histories           PaymentHistory[]
@@ -55,7 +56,14 @@ model Users {
   // ------------
   @@unique([email,playerId])
 }
+model VerificationToken {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  token     String
+  expires   DateTime
 
+  @@index([email])
+}
 model UsersTurnOver {
   id                  String @id @default(cuid())
   totalTurnOver       Decimal @default(0)
@@ -69,7 +77,6 @@ model Referral  {
   id                  String @id @default(cuid())
   userId              String @unique
   user                Users     @relation(fields: [userId], references: [id])
-
   referredUsers       Users[] @relation("ReferredUsers")
 }
 
@@ -82,6 +89,15 @@ model wallet {
   user                Users @relation(fields: [userId], references: [id])
 }
 
+model BonusWallet {
+  id                  String @id @default(cuid())
+  balance             Decimal
+  turnOver            Decimal 
+  currencyCode        String
+  hasInactive         Boolean @default(false)
+  userId              String @unique
+  user                Users @relation(fields: [userId], references: [id])
+}
 
 model admin {
   id                  String @id @default(cuid())
@@ -332,13 +348,20 @@ model Contact {
 model Site {
   id                  String @id @default(cuid())
   firstDepositBonus   Decimal? @default(0)      
-  maxAgWithdraw       Decimal? @default(0)  
+  referBonuseMainUser         Decimal? @default(0)
+  referBonuseRefererUser         Decimal? @default(0)
   maxWithdraw         Decimal? @default(0)
-  minAgWithdraw       Decimal? @default(0)  
   minWithdraw         Decimal? @default(0)
-  referBonuse         Decimal? @default(0)
-  signupBonus         Decimal? @default(0)
+  maxAgWithdraw       Decimal? @default(0)  
+  minAgWithdraw       Decimal? @default(0)  
+  maxAgDeposit       Decimal? @default(0)  
+  minAgDeposit       Decimal? @default(0)  
   turnover            Decimal? @default(0)
+
+  minAgentPayout      Decimal? @default(0)      
+  maxAgentPayout      Decimal? @default(0)    
+  agentDepositEarning Decimal? @default(0)
+  agentWithdrawEarning Decimal? @default(0)
 }
 
 

@@ -11,6 +11,25 @@ export const POST = async (req: NextRequest) => {
     if (!dpAmount && !wdAmount)
       return Response.json({ error: "Invalid input" }, { status: 400 });
 
+    const site = await db.site.findFirst({
+      where: {},
+      select: { maxAgentPayout: true, minAgentPayout: true },
+    });
+
+    const totalAmount = dpAmount + wdAmount;
+
+    if (totalAmount > +site!.maxAgentPayout!) {
+      return Response.json({
+        error: `Maximum payout ${site!.maxAgentPayout!}`,
+      });
+    }
+
+    if (totalAmount < +site!.minAgentPayout!) {
+      return Response.json({
+        error: `Minimum payout ${site!.minAgentPayout!}`,
+      });
+    }
+
     const agent = await findAgentFromSession();
 
     await db.agentEarningWithdrawReq.create({
