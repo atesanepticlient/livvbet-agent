@@ -115,6 +115,7 @@ model agent {
   fullName            String
   password            String
   documents           String
+  isActive            Boolean @default(true)
   isVerified          Boolean @default(false)
   isEmailVerified     Boolean @default(false)
   promo               String

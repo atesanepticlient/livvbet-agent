@@ -13,6 +13,10 @@ export const depositAction = async (data: { amount: number; id: string }) => {
 
     if (!agent) return { error: "Reload the page and try again" };
 
+    if (!agent.isActive) {
+      return { error: "Yor ware suspended! Contact to the admin" };
+    }
+
     const site = await db.site.findFirst({
       where: {},
       select: { minAgDeposit: true, maxAgDeposit: true },
