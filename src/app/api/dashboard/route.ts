@@ -37,6 +37,9 @@ export async function GET(request: Request) {
       totalWithdraws,
       depositRecords,
       withdrawRecords,
+      totalDepositPayoutsAgg,
+      totalWithdrawPayoutsAgg,
+      totalPayoutsAgg,
     ] = await Promise.all([
       // Total connected users
       db.users.count({
@@ -107,28 +110,64 @@ export async function GET(request: Request) {
           createdAt: "asc",
         },
       }),
+
+      // Total deposit payouts
+      db.agentEarningWithdrawReq.aggregate({
+        where: {
+          agentId: agent.id,
+          ...(startDate &&
+            endDate && {
+              createdAt: {
+                gte: new Date(startDate),
+                lte: new Date(endDate),
+              },
+            }),
+        },
+        _sum: {
+          dpAmount: true,
+        },
+      }),
+
+      // Total withdraw payouts
+      db.agentEarningWithdrawReq.aggregate({
+        where: {
+          agentId: agent.id,
+          ...(startDate &&
+            endDate && {
+              createdAt: {
+                gte: new Date(startDate),
+                lte: new Date(endDate),
+              },
+            }),
+        },
+        _sum: {
+          wdAmount: true,
+        },
+      }),
+
+      // Total payouts
+      db.agentEarningWithdrawReq.aggregate({
+        where: {
+          agentId: agent.id,
+          ...(startDate &&
+            endDate && {
+              createdAt: {
+                gte: new Date(startDate),
+                lte: new Date(endDate),
+              },
+            }),
+        },
+        _sum: {
+          amount: true,
+        },
+      }),
     ]);
 
-    const totalDepositPayouts =
-      (
-        await db.agentEarningWithdrawReq.aggregate({
-          where: { agentId: agent.id },
-          _sum: {
-            dpAmount: true,
-          },
-        })
-      )._sum.dpAmount || 0;
+    const totalDepositPayouts = totalDepositPayoutsAgg._sum.dpAmount || 0;
+    const totalWithdrawPayouts = totalWithdrawPayoutsAgg._sum.wdAmount || 0;
+    const totalPayouts = totalPayoutsAgg._sum.amount || 0;
 
-    const totalWithdarwPayouts =
-      (
-        await db.agentEarningWithdrawReq.aggregate({
-          where: { agentId: agent.id },
-          _sum: {
-            wdAmount: true,
-          },
-        })
-      )._sum.wdAmount || 0;
-    // Calculate earnings
+    // Calculate earnings using the filtered records
     const depositEarnings = depositRecords.reduce(
       (sum, record) =>
         sum + Number(record.amount) * (+site!.agentDepositEarning! / 100),
@@ -141,37 +180,25 @@ export async function GET(request: Request) {
     );
 
     const depositEarningsAvail = depositEarnings - +totalDepositPayouts;
-    const withdrawEarningsAvail = withdrawEarnings - +totalWithdarwPayouts;
-
-    const totalPayouts =
-      (
-        await db.agentEarningWithdrawReq.aggregate({
-          where: {
-            agentId: agent.id,
-          },
-          _sum: {
-            amount: true,
-          },
-        })
-      )._sum.amount || 0;
-
+    const withdrawEarningsAvail = withdrawEarnings - +totalWithdrawPayouts;
     const totalEarnings = depositEarnings + withdrawEarnings;
-    const totalEarningsAvail =
-      depositEarnings + withdrawEarnings - +totalPayouts;
+    const totalEarningsAvail = totalEarnings - +totalPayouts;
 
-    // Prepare chart data (group by day)
+    // Prepare chart data (group by day) using the same filtered records
     const earningsByDate: Record<string, number> = {};
 
-    [...depositRecords, ...withdrawRecords].forEach((record) => {
+    depositRecords.forEach((record) => {
       const date = record.createdAt.toISOString().split("T")[0];
-      const amount = Number(record.amount);
-      const earnings = "withdrawCode" in record ? amount * 0.1 : amount * 0.05;
+      const earnings =
+        Number(record.amount) * (+site!.agentDepositEarning! / 100);
+      earningsByDate[date] = (earningsByDate[date] || 0) + earnings;
+    });
 
-      if (earningsByDate[date]) {
-        earningsByDate[date] += earnings;
-      } else {
-        earningsByDate[date] = earnings;
-      }
+    withdrawRecords.forEach((record) => {
+      const date = record.createdAt.toISOString().split("T")[0];
+      const earnings =
+        Number(record.amount) * (+site!.agentWithdrawEarning! / 100);
+      earningsByDate[date] = (earningsByDate[date] || 0) + earnings;
     });
 
     const chartData = Object.entries(earningsByDate)
@@ -193,7 +220,7 @@ export async function GET(request: Request) {
         totalEarnings: Number(totalEarnings.toFixed(2)),
         totalAvailDeposit: Number(depositEarningsAvail.toFixed(2)),
         totalAvailWithdraw: Number(withdrawEarningsAvail.toFixed(2)),
-        availableEarnings: Number(totalEarningsAvail.toFixed(2)), // Assuming 20% is cashed out
+        availableEarnings: Number(totalEarningsAvail.toFixed(2)),
         depositEarnings: Number(depositEarnings.toFixed(2)),
         withdrawEarnings: Number(withdrawEarnings.toFixed(2)),
       },

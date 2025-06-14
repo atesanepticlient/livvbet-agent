@@ -19,15 +19,21 @@ export const POST = async (req: NextRequest) => {
     const totalAmount = dpAmount + wdAmount;
 
     if (totalAmount > +site!.maxAgentPayout!) {
-      return Response.json({
-        error: `Maximum payout ${site!.maxAgentPayout!}`,
-      });
+      return Response.json(
+        {
+          error: `Maximum payout ${site!.maxAgentPayout!}`,
+        },
+        { status: 400 }
+      );
     }
 
     if (totalAmount < +site!.minAgentPayout!) {
-      return Response.json({
-        error: `Minimum payout ${site!.minAgentPayout!}`,
-      });
+      return Response.json(
+        {
+          error: `Minimum payout ${site!.minAgentPayout!}`,
+        },
+        { status: 400 }
+      );
     }
 
     const agent = await findAgentFromSession();

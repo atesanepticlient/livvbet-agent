@@ -31,9 +31,30 @@ export const depositAction = async (data: { amount: number; id: string }) => {
     }
     const user = await db.users.findUnique({
       where: { id },
-      include: { agent: true },
+      include: { agent: true, deposits: true },
     });
+
     if (!user) return { error: "User not found" };
+
+    if (!user.deposits || user.deposits.length == 0) {
+      const site = await db.site.findFirst({
+        where: {},
+        select: { firstDepositBonus: true, turnover: true },
+      });
+
+      await db.bonusWallet.update({
+        where: {
+          userId: user!.id,
+        },
+        data: {
+          balance: { increment: amount * (+site!.firstDepositBonus! / 100) },
+          turnOver: {
+            increment:
+              amount * (+site!.firstDepositBonus! / 100) * +site!.turnover!,
+          },
+        },
+      });
+    }
 
     await db.wallet.update({
       where: {

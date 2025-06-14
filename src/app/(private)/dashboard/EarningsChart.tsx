@@ -90,9 +90,12 @@ export function EarningsChart() {
                 tickFormatter={(date) => format(new Date(date), "MMM dd")}
                 tick={{ fontSize: 10 }}
               />
-              <YAxis tick={{ fontSize: 10 }} />
+              <YAxis
+                tick={{ fontSize: 10 }}
+                tickFormatter={(value) => `৳${value}`}
+              />
               <Tooltip
-                formatter={(value) => [`$${value}`, "Earnings"]}
+                formatter={(value) => [`৳${value}`, "Earnings"]}
                 labelFormatter={(date) => format(new Date(date), "PPP")}
               />
               <Legend />
@@ -101,7 +104,7 @@ export function EarningsChart() {
                 dataKey="earnings"
                 stroke="#8884d8"
                 activeDot={{ r: 6 }}
-                name="Earnings"
+                name="Earnings (BDT)"
               />
             </LineChart>
           </ResponsiveContainer>

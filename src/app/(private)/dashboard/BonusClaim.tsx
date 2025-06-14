@@ -35,7 +35,7 @@ const BonusClaim = ({
         loading: "Requesting...",
         success: () => "Request was sent",
         error: (error) => {
-          return `${error.data?.message || INTERNAL_SERVER_ERROR}`;
+          return `${error.data?.error || INTERNAL_SERVER_ERROR}`;
         },
       });
     });

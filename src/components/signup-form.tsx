@@ -29,14 +29,17 @@ import { toast } from "sonner";
 import { redirect } from "next/navigation";
 import { Separator } from "@/components/ui/separator";
 import { Label } from "@/components/ui/label";
-import { addDocuments, signup } from "@/action/signup";
+import { addDocuments, sendVerificationEmail, signup } from "@/action/signup";
 import Link from "next/link";
+
 export function SignupForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
   const [pending, startTransition] = useTransition();
-
+  const [verificationSent, setVerificationSent] = useState(false);
+  const [verificationCode, setVerificationCode] = useState("");
+  const [emailToVerify, setEmailToVerify] = useState("");
   const [documents, setDocuments] = useState<any>();
 
   const form = useForm<zod.infer<typeof signupSchema>>({
@@ -52,9 +55,34 @@ export function SignupForm({
     resolver: zodResolver(signupSchema),
   });
 
-  const handleSignup = (data: zod.infer<typeof signupSchema>) => {
+  const handleSendVerification = () => {
+    const email = form.getValues("email");
+    if (!email) {
+      toast("Please enter your email first");
+      return;
+    }
+
     startTransition(() => {
-      signup(data).then(async (res) => {
+      sendVerificationEmail(email).then((res) => {
+        if (res.success) {
+          setVerificationSent(true);
+          setEmailToVerify(email);
+          toast("Verification code sent to your email");
+        } else {
+          toast(res.error);
+        }
+      });
+    });
+  };
+
+  const handleSignup = (data: zod.infer<typeof signupSchema>) => {
+    if (!verificationSent || data.email !== emailToVerify) {
+      toast("Please verify your email first");
+      return;
+    }
+
+    startTransition(() => {
+      signup(data, verificationCode).then(async (res) => {
         if (res.success) {
           const imageUrl = await uploadImage(documents);
           await addDocuments(imageUrl, form.getValues("email"));
@@ -105,9 +133,9 @@ export function SignupForm({
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card>
         <CardHeader>
-          <CardTitle>Login to your account</CardTitle>
+          <CardTitle>Create your account</CardTitle>
           <CardDescription>
-            Enter your email below to login to your account
+            Enter your details below to create an account
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -120,7 +148,6 @@ export function SignupForm({
                   render={({ field }) => (
                     <FormItem className="grid ">
                       <FormLabel>Full Name</FormLabel>
-
                       <FormControl>
                         <Input
                           disabled={pending}
@@ -135,16 +162,17 @@ export function SignupForm({
                     </FormItem>
                   )}
                 />
-                <div className="flex items-center gap-2">
-                  <FormField
-                    name="email"
-                    control={form.control}
-                    render={({ field }) => (
-                      <FormItem className="grid ">
-                        <FormLabel>Email</FormLabel>
+
+                <FormField
+                  name="email"
+                  control={form.control}
+                  render={({ field }) => (
+                    <FormItem className="grid ">
+                      <FormLabel>Email</FormLabel>
+                      <div className="flex gap-2">
                         <FormControl>
                           <Input
-                            disabled={pending}
+                            disabled={pending || verificationSent}
                             id="email"
                             type="email"
                             placeholder="m@example.com"
@@ -152,31 +180,53 @@ export function SignupForm({
                             {...field}
                           />
                         </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    name="phone"
-                    control={form.control}
-                    render={({ field }) => (
-                      <FormItem className="grid ">
-                        <FormLabel>Phone</FormLabel>
-                        <FormControl>
-                          <Input
-                            disabled={pending}
-                            id="phone"
-                            type="text"
-                            placeholder="01*********"
-                            required
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
+                        <Button
+                          type="button"
+                          disabled={pending || verificationSent}
+                          onClick={handleSendVerification}
+                        >
+                          {verificationSent ? "Sent" : "Verify"}
+                        </Button>
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {verificationSent && (
+                  <div className="grid gap-2">
+                    <Label htmlFor="verificationCode">Verification Code</Label>
+                    <Input
+                      id="verificationCode"
+                      type="text"
+                      placeholder="Enter verification code"
+                      value={verificationCode}
+                      onChange={(e) => setVerificationCode(e.target.value)}
+                      disabled={pending}
+                    />
+                  </div>
+                )}
+
+                <FormField
+                  name="phone"
+                  control={form.control}
+                  render={({ field }) => (
+                    <FormItem className="grid ">
+                      <FormLabel>Phone</FormLabel>
+                      <FormControl>
+                        <Input
+                          disabled={pending}
+                          id="phone"
+                          type="text"
+                          placeholder="01*********"
+                          required
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
                 <div className="flex items-center gap-2">
                   <FormField
@@ -185,7 +235,6 @@ export function SignupForm({
                     render={({ field }) => (
                       <FormItem className="grid ">
                         <FormLabel>Password</FormLabel>
-
                         <FormControl>
                           <Input
                             disabled={pending}
@@ -206,7 +255,6 @@ export function SignupForm({
                     render={({ field }) => (
                       <FormItem className="grid ">
                         <FormLabel>Confirm Password</FormLabel>
-
                         <FormControl>
                           <Input
                             disabled={pending}
@@ -230,7 +278,6 @@ export function SignupForm({
                     render={({ field }) => (
                       <FormItem className="grid ">
                         <FormLabel>Currency</FormLabel>
-
                         <FormControl>
                           <Input
                             disabled={pending}
@@ -251,7 +298,6 @@ export function SignupForm({
                     render={({ field }) => (
                       <FormItem className="grid ">
                         <FormLabel>Promo Code (Optional)</FormLabel>
-
                         <FormControl>
                           <Input
                             disabled={pending}

@@ -25,3 +25,5 @@ export const AGENT_EXIST = "This Email is already used";
  * @type {string}
  */
 export const PROMO_USED = "Try with another Promo";
+
+export const INVALID_VERIFICATION_CODE = "Invalid or expired verification code";
