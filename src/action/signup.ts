@@ -12,7 +12,6 @@ import { signupSchema } from "@/schema";
 import bcrypt from "bcryptjs";
 import { generateRandomCode } from "@/lib/utils";
 import nodemailer from "nodemailer";
-
 import zod from "zod";
 
 interface VerificationCode {
@@ -23,7 +22,6 @@ interface VerificationCode {
 
 const verificationCodes = new Map<string, VerificationCode>();
 
-// Create a transporter for nodemailer
 const transporter = nodemailer.createTransport({
   service: "gmail",
   secure: process.env.SMTP_SECURE === "true",
@@ -35,20 +33,16 @@ const transporter = nodemailer.createTransport({
 
 export const sendVerificationEmail = async (email: string) => {
   try {
-    // Check if email already exists
     const existingAgent = await db.agent.findUnique({ where: { email } });
     if (existingAgent) {
       return { error: AGENT_EXIST };
     }
 
-    // Generate verification code
     const code = generateRandomCode(6);
-    const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes expiration
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
 
-    // Store the verification code
     verificationCodes.set(email, { code, expiresAt, email });
 
-    // Send email using nodemailer
     await transporter.sendMail({
       from: `"Livvbet" <${process.env.SMTP_FROM_EMAIL}>`,
       to: email,
@@ -71,7 +65,6 @@ export const signup = async (
   try {
     const { email, fullName, password, phone, currencyCode, promo } = data;
 
-    // Verify the code
     const storedCode = verificationCodes.get(email);
     if (
       !storedCode ||
@@ -81,34 +74,34 @@ export const signup = async (
       return { error: INVALID_VERIFICATION_CODE };
     }
 
-    // Clear the verification code
     verificationCodes.delete(email);
 
     const isAgentExist = await db.agent.findUnique({ where: { email } });
-
     if (isAgentExist) {
       return { error: AGENT_EXIST };
     }
 
-    const isPromoUsed = await db.agent.findFirst({ where: { promo } });
-
-    if (isPromoUsed) {
-      return { error: PROMO_USED };
+    if (promo) {
+      const isPromoUsed = await db.agent.findFirst({ where: { promo } });
+      if (isPromoUsed) {
+        return { error: PROMO_USED };
+      }
     }
 
-    const hasedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password, 10);
 
     let newPromo = "";
     if (!promo) {
       newPromo = generatePromoCode(6);
     }
+
     await db.agent.create({
       data: {
         fullName,
         email,
         phone,
-        password: hasedPassword,
-        documents: "",
+        password: hashedPassword,
+        documents: "", // Will be updated after upload
         promo: promo || newPromo,
         agent: {
           create: {
@@ -126,15 +119,16 @@ export const signup = async (
   }
 };
 
-export const addDocuments = async (imageUrl: string, agentEmail: string) => {
+export const addDocuments = async (documents: string, agentEmail: string) => {
   try {
     await db.agent.update({
       where: { email: agentEmail },
-      data: { documents: imageUrl },
+      data: { documents },
     });
 
     return { success: true };
-  } catch {
+  } catch (error) {
+    console.error("Error adding documents:", error);
     return { error: INTERNAL_SERVER_ERROR };
   }
 };

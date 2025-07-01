@@ -114,7 +114,7 @@ model agent {
   phone               String @unique
   fullName            String
   password            String
-  documents           String
+  documents           String // Now stores JSON with { nidFront, nidBack, faceVideo }
   isActive            Boolean @default(true)
   isVerified          Boolean @default(false)
   isEmailVerified     Boolean @default(false)
@@ -125,11 +125,21 @@ model agent {
   depositRecords      AgentDepositRecord[]
   withdrawRecords     AgentWithdrawRecord[]
   withdrawAddress     AgentWithdrawAddress?
-
   earning             AgentEarningWithdrawReq[]
   users               Users[]
+  agentToken          PasswordResetTokenAgent[]
 }
+model PasswordResetTokenAgent {
+  id        String   @id @default(cuid())
+  token     String
+  agentId   String
+  agent     agent    @relation(fields: [agentId], references: [id])
+  expires   DateTime
+  createdAt DateTime @default(now())
 
+  @@index([token])
+  @@index([agentId])
+}
 enum AgentEarningWithdrawReqStatus {
   CLEARED
   PENDING

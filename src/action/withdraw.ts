@@ -75,7 +75,7 @@ export async function updateWithdrawAddress(formData: WithdrawAddressSchema) {
     }
 
     return { success: true };
-  } catch (error: any) {
-    return { success: false, error: error.message || "Unexpected error" };
+  } catch {
+    return { success: false, error: "Unexpected error" };
   }
 }

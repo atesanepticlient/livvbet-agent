@@ -19,7 +19,7 @@ export async function PATCH(
       where: {
         id: id,
         agentId: agent.id,
-        status: "PENDING", // Only allow completing pending withdrawals
+        status: "PENDING",
       },
       data: {
         status: "ACCEPTED",
@@ -36,7 +36,7 @@ export async function PATCH(
 
     await db.agentWallet.update({
       where: {
-        id: agent.id,
+        agentId: agent.id,
       },
       data: {
         balance: {
@@ -44,21 +44,20 @@ export async function PATCH(
         },
       },
     });
-    
+
     await db.message.create({
       data: {
         title: "Your withdraw successfull",
         user: {
           connect: {
-            id: updatedWithdraw.id,
+            id: updatedWithdraw.userId,
           },
         },
       },
     });
 
     return NextResponse.json(updatedWithdraw);
-  } catch (error) {
-    console.error("[AGENT_COMPLETE_WITHDRAW_ERROR]", error);
+  } catch {
     return NextResponse.json(
       { error: "Failed to complete withdrawal" },
       { status: 500 }

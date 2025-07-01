@@ -8,7 +8,7 @@ export const loginSchema = zod.object({
 export const signupSchema = zod
   .object({
     fullName: zod.string().min(4, "Full Name must be at least 4 characters"),
-    email: zod.string().email("Invalid emaill address"),
+    email: zod.string().email("Invalid email address"),
     phone: zod.string().min(1, "Phone number is required"),
     password: zod.string().min(6, "Password must be at least 6 characters"),
     promo: zod.optional(zod.string()),
@@ -25,6 +25,7 @@ export const signupSchema = zod
     { path: ["confirmPassword"], message: "Confirm Password did not match" }
   );
 
+export type SignupSchema = zod.infer<typeof signupSchema>;
 export const eWalletWithdrawInformationUpdateSchema = zod.object({
   min: zod.optional(zod.string()),
   max: zod.optional(zod.string()),

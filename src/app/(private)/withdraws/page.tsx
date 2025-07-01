@@ -79,7 +79,7 @@ export default function PendingWithdrawsPage() {
         success: () => "Withdraw Completed",
         error: (error) => {
           if (error.data.error) {
-            return `${error.data.message}`;
+            return `${error.data.error}`;
           } else {
             return `${INTERNAL_SERVER_ERROR}`;
           }

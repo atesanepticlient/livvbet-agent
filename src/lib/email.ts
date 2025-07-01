@@ -1,37 +1,47 @@
-import nodeMailer, { SendMailOptions } from "nodemailer";
+// lib/mailer.ts
+import nodemailer from "nodemailer";
 
-const transporter = nodeMailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 587,
-  secure: false,
+const transporter = nodemailer.createTransport({
+  host: process.env.SMTP_HOST, // e.g. mail.yourdomain.com
+  port: parseInt(process.env.SMTP_PORT || "465"),
+  secure: process.env.SMTP_SECURE === "true", // true for 465, false for 587
   auth: {
-    user: process.env.SMTP_USERNAME,
-    pass: process.env.SMTP_PASSWORD,
+    user: process.env.SMTP_USERNAME, // your@yourdomain.com
+    pass: process.env.SMTP_PASSWORD, // email password
   },
 });
 
-export const sendAdminVerificationTokenMail = async (
-  email: string,
-  token: string
-) => {
-  const options = {
-    from: process.env.SMTP_USERNAME,
-    to: email,
-    html: `<html>
-    <body>
-      <div style="text-align: center; padding: 20px; font-family: Arial;">
-        <h2>🔐 Admin Panel Login Code</h2>
-        <p>Your OTP is: <strong style="font-size: 20px; color: #ff5722;">${token}</strong></p>
-        <p>This code is valid for <strong>2 minutes</strong>. Do not share it.</p>
-        <p>If you didn't request this, please ignore this email.</p>
-      </div>
-    </body>
-    </html>`,
-  } as SendMailOptions;
+interface SendMailOptions {
+  to: string;
+  subject: string;
+  html: string;
+}
+
+export async function sendMail({ to, subject, html }: SendMailOptions) {
   try {
-    await transporter.sendMail(options);
-    return true;
-  } catch {
-    return null;
+    await transporter.sendMail({
+      from: `"Livvbet" <${process.env.SMTP_USERNAME}>`,
+      to,
+      subject,
+      html,
+    });
+    return { success: true };
+  } catch (error) {
+    console.error("Error sending email:", error);
+    return { success: false, error };
   }
-};
+}
+
+export function generatePasswordResetEmail(token: string): string {
+  return `
+    <div style="font-family: Arial, sans-serif; line-height: 1.6;">
+      <h2>Password Reset Request</h2>
+      <p>You requested to reset your password. Here's your verification code:</p>
+      <div style="background: #f4f4f4; padding: 10px; margin: 10px 0; font-size: 24px; letter-spacing: 2px; text-align: center;">
+        ${token}
+      </div>
+      <p>This code will expire in 15 minutes.</p>
+      <p>If you didn't request this, please ignore this email.</p>
+    </div>
+  `;
+}
